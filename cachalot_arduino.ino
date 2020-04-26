@@ -14,6 +14,7 @@
 bool DEBUG = 1;
 
 // Libraories
+#include <ArduinoJson.h>
 #include <SPI.h>
 #include "DHT.h"
 
@@ -157,9 +158,11 @@ void loop() {
     Serial.println("New client!");
     EasyWebServer w(client);                    // Read and parse the HTTP Request
     w.serveUrl("/", rootPage);                  // Root page
-    w.serveUrl("/xml", dashboardXML);           // XML page
+    w.serveUrl("/json", dashboardJSON, EWS_TYPE_JSON); // JSON page
     w.serveUrl("/relay_1/off", relay_1_off);
     w.serveUrl("/relay_1/on", relay_1_on);
+    w.serveUrl("/relay_2/off", relay_2_off);
+    w.serveUrl("/relay_2/on", relay_2_on);
     w.serveUrl("/debug/analog", analogSensorPage);    // Analog sensor page
     w.serveUrl("/debug/digital", digitalSensorPage);  // Digital sensor page
   }
@@ -167,41 +170,84 @@ void loop() {
 
 void rootPage(EasyWebServer &w) {
   w.client.println(F("<!DOCTYPE HTML>"));
-  w.client.println(F("<html><head><title>EasyWebServer</title></head><body>"));
+  w.client.println(F("<html><head><title>Cachalot</title>"));
+  w.client.println(F("<meta name=\"robots\" content=\"noindex\">"));
+  w.client.println(F("<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">"));
+  w.client.println(F("</head><body style=\"padding: 0.5em;font-family: sans-serif;\">"));
   w.client.println(F("<p>Welcome to my little web server.</p>"));
-  w.client.println(F("<p><a href='/debug/analog'>Debug analog sensors</a></p>"));
-  w.client.println(F("<p><a href='/debug/digital'>Debug digital sensors</a></p>"));
+
+  w.client.print(F("Values :"));
+  w.client.print(F("<ul>"));
+
+  w.client.print(F("<li>waterLevel : "));
+  w.client.print(WATER_LEVEL_MEASURE);
+  w.client.print(F("</li>"));
+
+  w.client.print(F("<li>temperature : "));
+  w.client.print(temperature); 
+  w.client.print(F("</li>"));
+  
+  w.client.print(F("<li>humidity : "));
+  w.client.print(humidity);
+  w.client.print(F("</li>"));
+
+  w.client.print(F("<li>heatIndex : "));
+  w.client.print(heatIndex);
+  w.client.print(F("</li>"));
+
+  w.client.print(F("<li>relay1Status : "));
+  w.client.print(RELAY_1_STATUS);
+  w.client.println(F(" <a href='/relay_1/on'>ON</a> <a href='/relay_1/off'>OFF</a>"));
+  w.client.print(F("</li>"));
+
+  w.client.print(F("<li>relay2Status : "));
+  w.client.print(RELAY_2_STATUS);
+  w.client.println(F(" <a href='/relay_2/on'>ON</a> <a href='/relay_2/off'>OFF</a>"));
+  w.client.print(F("</li>"));
+
+  w.client.print(F("</ul>"));
+
+
+  
+  w.client.println(F("<hr />"));
+  w.client.println(F("<p>Debug : <a href='/debug/analog'>analog sensors</a>, <a href='/debug/digital'>digital sensors</a></p>"));
+  w.client.println(F("<p>More : <a href='/json'>values in JSON</a></p>"));
   w.client.println(F("</body></html>"));
 
 }
 
+void dashboardJSON(EasyWebServer &w) {
 
-void dashboardXML(EasyWebServer &w) {
 
-  w.client.println(F("<?xml version = \"1.0\" encoding=\"UTF-8\"?>"));
-  w.client.print(F("<response>"));
+  w.client.println(F("{"));
 
-  w.client.print(F("<waterLevel>"));
+  w.client.print(F("\"waterLevel\":"));
   w.client.print(WATER_LEVEL_MEASURE);
-  w.client.print(F("</waterLevel>"));
+  w.client.print(F(","));
 
-  w.client.print(F("<temperature>"));
+  w.client.print(F("\"temperature\":"));
   w.client.print(temperature);
-  w.client.print(F("</temperature>"));
+  w.client.print(F(","));
 
-  w.client.print(F("<humidity>"));
+  w.client.print(F("\"humidity\":"));
   w.client.print(humidity);
-  w.client.print(F("</humidity>"));
+  w.client.print(F(","));
 
-  w.client.print(F("<heatIndex>"));
+  w.client.print(F("\"heatIndex\":"));
   w.client.print(heatIndex);
-  w.client.print(F("</heatIndex>"));
+  w.client.print(F(","));
 
-  w.client.print(F("<relay1Status>"));
+  w.client.print(F("\"relay1Status\":"));
   w.client.print(RELAY_1_STATUS);
-  w.client.print(F("</relay1Status>"));
+  w.client.print(F(","));
 
-  w.client.print(F("</response>"));
+  w.client.print(F("\"relay2Status\":"));
+  w.client.print(RELAY_2_STATUS);
+ // w.client.print(F(""));
+
+  w.client.print(F("}"));
+
+
 
 }
 
@@ -216,6 +262,21 @@ void relay_1_on(EasyWebServer &w) {
 void relay_1_off(EasyWebServer &w) {
 
   digitalWrite(GPIO_RELAY_1, HIGH);
+  w.client.println(F("<meta http-equiv=\"refresh\" content=\"0;url=/\" />"));
+
+}
+
+
+void relay_2_on(EasyWebServer &w) {
+
+  digitalWrite(GPIO_RELAY_2, LOW);
+  w.client.println(F("<meta http-equiv=\"refresh\" content=\"0;url=/\" />"));
+
+}
+
+void relay_2_off(EasyWebServer &w) {
+
+  digitalWrite(GPIO_RELAY_2, HIGH);
   w.client.println(F("<meta http-equiv=\"refresh\" content=\"0;url=/\" />"));
 
 }
