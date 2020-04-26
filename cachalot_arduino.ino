@@ -14,14 +14,12 @@
 int DEBUG = 1;
 
 // Libraories
-#include <ArduinoJson.h>
+#include <SPI.h>
 #include "DHT.h"
 
 
-// -------------[ CABLAGE ]--------------------
-
 // Cable de la sonde de 0(20%) a 4(100%)
-const int CAPTEUR_GPIO[] = {
+const uint8_t CAPTEUR_GPIO[] = {
   3, 4, 5, 6, 7
 };
 const int CAPTEUR_GPIO_COUNT = 5;           // the number of pins (i.e. the length of the array)
@@ -57,6 +55,8 @@ int charcount = 0;
 
 // Setup Ethernet controler for ENC28J60
 #include <UIPEthernet.h>
+#include <EasyWebServer.h>
+
 byte mac[] = {0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0x70}; // assign a MAC address for the ethernet controller.
 IPAddress ip(192, 168, 1, 70);
 IPAddress gateway(192, 168, 1, 2);
@@ -67,12 +67,11 @@ EthernetServer server(80); // Initialize the Ethernet server library
 
 
 
-
 void setup() {
 
   // GPIO_RELAY_1 module prepared
-  // pinMode(GPIO_RELAY_1, OUTPUT);
-  // digitalWrite(GPIO_RELAY_1, HIGH);
+  pinMode(GPIO_RELAY_1, OUTPUT);
+  digitalWrite(GPIO_RELAY_1, HIGH);
 
 
   // initialize serial communication at 9600 bits per second:
@@ -113,15 +112,15 @@ void loop() {
   // check for a reading no more than once a second.
   if (millis() - lastReadingTime > 5000) {
 
+    delay(2000);
     WATER_LEVEL_MEASURE = getWaterLevel();
 
 
     temperature = getTemperature();
     humidity = getHumidity();
     heatIndex = getHeatIndex();
-    
-    RELAY_1_STATUS = 0;
-   // RELAY_1_STATUS = !(digitalRead(GPIO_RELAY_1));
+
+    RELAY_1_STATUS = !(digitalRead(GPIO_RELAY_1));
 
 
     // debug
@@ -156,12 +155,112 @@ void loop() {
 
 
   // listen for incoming Ethernet connections:
-  listenForEthernetClients();
+  //listenForEthernetClients();
+
+  // Listen for incoming clients
+  EthernetClient client = server.available();
+  if (client) {
+    Serial.println("New client!");
+    EasyWebServer w(client);                    // Read and parse the HTTP Request
+    w.serveUrl("/", rootPage);                  // Root page
+    w.serveUrl("/xml", dashboardXML);           // XML page
+    w.serveUrl("/relay_1/off", relay_1_off);
+    w.serveUrl("/relay_1/on", relay_1_on);
+    w.serveUrl("/analog", analogSensorPage);    // Analog sensor page
+    w.serveUrl("/digital", digitalSensorPage);  // Digital sensor page
+  }
+}
+
+void rootPage(EasyWebServer &w) {
+  w.client.println(F("<!DOCTYPE HTML>"));
+  w.client.println(F("<html><head><title>EasyWebServer</title></head><body>"));
+  w.client.println(F("<p>Welcome to my little web server.</p>"));
+  w.client.println(F("<p><a href='/analog'>Click here to see the analog sensors</a></p>"));
+  w.client.println(F("<p><a href='/digital'>Click here to see the digital sensors</a></p>"));
+  w.client.println(F("</body></html>"));
 
 }
 
+
+void dashboardXML(EasyWebServer &w) {
+
+  w.client.println(F("<?xml version = \"1.0\" encoding=\"UTF-8\"?>"));
+  w.client.print(F("<response>"));
+
+  w.client.print(F("<waterLevel>"));
+  w.client.print(WATER_LEVEL_MEASURE);
+  w.client.print(F("</waterLevel>"));
+
+  w.client.print(F("<temperature>"));
+  w.client.print(temperature);
+  w.client.print(F("</temperature>"));
+
+  w.client.print(F("<humidity>"));
+  w.client.print(humidity);
+  w.client.print(F("</humidity>"));
+
+  w.client.print(F("<heatIndex>"));
+  w.client.print(heatIndex);
+  w.client.print(F("</heatIndex>"));
+
+  w.client.print(F("<relay1Status>"));
+  w.client.print(RELAY_1_STATUS);
+  w.client.print(F("</relay1Status>"));
+
+  w.client.print(F("</response>"));
+
+}
+
+
+void relay_1_on(EasyWebServer &w) {
+
+  digitalWrite(GPIO_RELAY_1, LOW);
+  w.client.println(F("<meta http-equiv=\"refresh\" content=\"0;url=/\" />"));
+
+}
+
+void relay_1_off(EasyWebServer &w) {
+
+  digitalWrite(GPIO_RELAY_1, HIGH);
+  w.client.println(F("<meta http-equiv=\"refresh\" content=\"0;url=/\" />"));
+
+}
+
+
+
+void analogSensorPage(EasyWebServer &w) {
+  w.client.println(F("<!DOCTYPE HTML>"));
+  w.client.println(F("<html><head><title>Analog Sensors</title></head><body>"));
+  for (int analogChannel = 0; analogChannel < 6; analogChannel++) {
+    int sensorReading = analogRead(analogChannel); // Note that analogReaad uses CHANNELS insead of pin.
+    w.client.print(F("analog input "));
+    w.client.print(analogChannel);
+    w.client.print(F(" is "));
+    w.client.print(sensorReading);
+    w.client.println(F("<br />"));
+  }
+  w.client.println(F("<p><a href='/'>Home</a></body></html>"));
+}
+
+void digitalSensorPage(EasyWebServer &w) {
+  w.client.println(F("<!DOCTYPE HTML>"));
+  w.client.println(F("<html><head><title>Digital Sensors</title></head><body>"));
+  for (int digitalPin = 2; digitalPin < 8; digitalPin++) {
+    int sensorReading = digitalRead(digitalPin);
+    w.client.print(F("digital pin "));
+    w.client.print(digitalPin);
+    w.client.print(F(" is "));
+    w.client.print(sensorReading);
+    w.client.println(F("<br />"));
+  }
+  w.client.println(F("<p><a href='/'>Home</a></body></html>"));
+}
+
+
 float getTemperature() {
-  return dht.readTemperature();
+
+  float t = dht.readTemperature();
+  return t;
 }
 
 float getHumidity() {
@@ -218,100 +317,4 @@ float getWaterLevel() {
 
   return WATER_LEVEL;
 
-}
-
-
-// Display dashboard page with on/off button for GPIO_GPIO_RELAY_1_1
-// It also print Temperature in C and F
-void dashboardPageJson(EthernetClient &client) {
-
-  const size_t capacity = JSON_OBJECT_SIZE(6);
-  
-  DynamicJsonDocument doc(capacity);
-  doc["name"] = "cachalot";
-  doc["waterLevel"] = WATER_LEVEL_MEASURE;
-  doc["temperature"] = temperature;
-  doc["heatIndex"] = heatIndex;
-  doc["humidity"] = humidity;
-  doc["relay1Status"] = RELAY_1_STATUS;
-
-
-  Serial.print(F("Sending: "));
-  serializeJson(doc, Serial);
-  Serial.println();
-
-  // Write response headers
-  client.println(F("HTTP/1.0 200 OK"));
-  client.println(F("Content-Type: application/json"));
-  client.println(F("Connection: close"));
-  client.print(F("Content-Length: "));
-  client.println(measureJsonPretty(doc));
-  client.println();
-
-  serializeJsonPretty(doc, client);   // Write JSON document
-
-}
-
-
-
-void listenForEthernetClients() {
-
-  // listen for incoming clients
-  EthernetClient client = server.available();
-
-  // Do we have a client?
-  if (!client) return;
-
-
-  Serial.println(F("New client"));
-
-  memset(linebuf, 0, sizeof(linebuf));
-  charcount = 0;
-  // an http request ends with a blank line
-  boolean currentLineIsBlank = true;
-
-  // Read the request (we ignore the content in this example)
-  while (client.connected()) {
-    if (client.available()) {
-      char c = client.read();
-      //read char by char HTTP request
-      linebuf[charcount] = c;
-      if (charcount < sizeof(linebuf) - 1) charcount++;
-      // if you've gotten to the end of the line (received a newline
-      // character) and the line is blank, the http request has ended,
-      // so you can send a reply
-
-      if (c == '\n' && currentLineIsBlank) {
-        dashboardPageJson(client);
-        break;
-      }
-      if (c == '\n') {
-        if (strstr(linebuf, "GET /relay_1_off") > 0) {
-          digitalWrite(GPIO_RELAY_1, HIGH);          
-          client.println(F("<meta http-equiv=\"refresh\" content=\"0;url=/\" />"));
-
-        }
-        else if (strstr(linebuf, "GET /relay_1_on") > 0) {
-          digitalWrite(GPIO_RELAY_1, LOW); 
-          client.println(F("<meta http-equiv=\"refresh\" content=\"0;url=/\" />"));
-        }
-
-        // you're starting a new line
-        currentLineIsBlank = true;
-        memset(linebuf, 0, sizeof(linebuf));
-        charcount = 0;
-      }
-      else if (c != '\r') {
-        // you've gotten a character on the current line
-        currentLineIsBlank = false;
-      }
-    }
-  }
-
-
-  // give the web browser time to receive the data
-  delay(1);
-  // close the connection:
-  client.stop();
-  Serial.println("client disconnected");
 }
