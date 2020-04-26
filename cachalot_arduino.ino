@@ -11,7 +11,7 @@
 //
 // -------------------------------------------
 
-int DEBUG = 1;
+bool DEBUG = 1;
 
 // Libraories
 #include <SPI.h>
@@ -19,10 +19,8 @@ int DEBUG = 1;
 
 
 // Cable de la sonde de 0(20%) a 4(100%)
-const uint8_t CAPTEUR_GPIO[] = {
-  3, 4, 5, 6, 7
-};
-const int CAPTEUR_GPIO_COUNT = 5;           // the number of pins (i.e. the length of the array)
+const uint8_t CAPTEUR_GPIO[] = { 3, 4, 5, 6, 7};
+const uint8_t CAPTEUR_GPIO_COUNT = 5;           // the number of pins (i.e. the length of the array)
 
 const float CAPTEUR_0_DISTANCE = 20;
 const float CAPTEUR_1_DISTANCE = 40.5;
@@ -40,18 +38,17 @@ float heatIndex;
 
 
 // Relai
-const int GPIO_RELAY_1 = 8;
+const uint8_t GPIO_RELAY_1 = 8;
 bool RELAY_1_STATUS;
+const uint8_t GPIO_RELAY_2 = 9;
+bool RELAY_2_STATUS;
 
 
 // Variables
-const int waterIsOver = 0;  // value when water is triggering switch
-
+const boolean waterIsOver = false;  // value when water is triggering switch
 float WATER_LEVEL_MEASURE;
-long lastReadingTime = 0;
-char linebuf[80];
-int charcount = 0;
-
+uint32_t lastReadingTime = 0;
+ 
 
 // Setup Ethernet controler for ENC28J60
 #include <UIPEthernet.h>
@@ -113,25 +110,28 @@ void loop() {
   if (millis() - lastReadingTime > 5000) {
 
     delay(2000);
+    
     WATER_LEVEL_MEASURE = getWaterLevel();
-
-
     temperature = getTemperature();
     humidity = getHumidity();
     heatIndex = getHeatIndex();
-
     RELAY_1_STATUS = !(digitalRead(GPIO_RELAY_1));
 
-
+    // timestamp the last time you got a reading:
+    lastReadingTime = millis();
+    
     // debug
     if (DEBUG == 1) {
 
-      Serial.println (WATER_LEVEL_MEASURE);
+      Serial.print (F("Waterlevel : "));
+      Serial.print (WATER_LEVEL_MEASURE);
+      Serial.print (F(" cm "));
 
       Serial.print(F("Humidity: "));
       Serial.print(humidity);
+      Serial.print(F("% "));
 
-      Serial.print(F("%  Temperature: "));
+      Serial.print(F("Temperature: "));
       Serial.print(temperature);
       Serial.print(F("°C "));
 
@@ -139,23 +139,17 @@ void loop() {
       Serial.print(heatIndex);
       Serial.print(F("°C "));
 
-
       Serial.print(F("Relai n°1 : "));
       Serial.print(RELAY_1_STATUS);
+      Serial.print(F(" "));
 
+      Serial.print(F("Relai n°2 : "));
+      Serial.print(RELAY_2_STATUS);
 
     }
 
-
-    // timestamp the last time you got a reading:
-    lastReadingTime = millis();
   }
 
-
-
-
-  // listen for incoming Ethernet connections:
-  //listenForEthernetClients();
 
   // Listen for incoming clients
   EthernetClient client = server.available();
@@ -166,8 +160,8 @@ void loop() {
     w.serveUrl("/xml", dashboardXML);           // XML page
     w.serveUrl("/relay_1/off", relay_1_off);
     w.serveUrl("/relay_1/on", relay_1_on);
-    w.serveUrl("/analog", analogSensorPage);    // Analog sensor page
-    w.serveUrl("/digital", digitalSensorPage);  // Digital sensor page
+    w.serveUrl("/debug/analog", analogSensorPage);    // Analog sensor page
+    w.serveUrl("/debug/digital", digitalSensorPage);  // Digital sensor page
   }
 }
 
@@ -175,8 +169,8 @@ void rootPage(EasyWebServer &w) {
   w.client.println(F("<!DOCTYPE HTML>"));
   w.client.println(F("<html><head><title>EasyWebServer</title></head><body>"));
   w.client.println(F("<p>Welcome to my little web server.</p>"));
-  w.client.println(F("<p><a href='/analog'>Click here to see the analog sensors</a></p>"));
-  w.client.println(F("<p><a href='/digital'>Click here to see the digital sensors</a></p>"));
+  w.client.println(F("<p><a href='/debug/analog'>Debug analog sensors</a></p>"));
+  w.client.println(F("<p><a href='/debug/digital'>Debug digital sensors</a></p>"));
   w.client.println(F("</body></html>"));
 
 }
@@ -277,23 +271,23 @@ float getWaterLevel() {
 
   while (true) {
 
-    if ((int) digitalRead(CAPTEUR_GPIO[4]) == waterIsOver) {
+    if ((bool) digitalRead(CAPTEUR_GPIO[4]) == waterIsOver) {
       WATER_LEVEL =  CAPTEUR_4_DISTANCE;
       break;
     }
-    if ((int) digitalRead(CAPTEUR_GPIO[3]) == waterIsOver) {
+    if ((bool) digitalRead(CAPTEUR_GPIO[3]) == waterIsOver) {
       WATER_LEVEL =  CAPTEUR_3_DISTANCE;
       break;
     }
-    if ((int) digitalRead(CAPTEUR_GPIO[2]) == waterIsOver) {
+    if ((bool) digitalRead(CAPTEUR_GPIO[2]) == waterIsOver) {
       WATER_LEVEL =  CAPTEUR_2_DISTANCE;
       break;
     }
-    if ((int) digitalRead(CAPTEUR_GPIO[1]) == waterIsOver) {
+    if ((bool) digitalRead(CAPTEUR_GPIO[1]) == waterIsOver) {
       WATER_LEVEL =  CAPTEUR_1_DISTANCE;
       break;
     }
-    if ((int) digitalRead(CAPTEUR_GPIO[0]) == waterIsOver) {
+    if ((bool) digitalRead(CAPTEUR_GPIO[0]) == waterIsOver) {
       WATER_LEVEL =  CAPTEUR_0_DISTANCE;
       break;
     }
@@ -301,19 +295,7 @@ float getWaterLevel() {
     WATER_LEVEL = 0;
     break;
 
-
   }
-
-
-  Serial.println(WATER_LEVEL);
-
-  for (int thisPin = 0; thisPin < CAPTEUR_GPIO_COUNT; thisPin++) {
-    Serial.print("GPIO ");
-    Serial.print (CAPTEUR_GPIO[thisPin]);
-    Serial.print(" : ");
-    Serial.println ((int) digitalRead(CAPTEUR_GPIO[thisPin]));
-  }
-
 
   return WATER_LEVEL;
 
