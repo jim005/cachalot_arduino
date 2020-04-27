@@ -166,7 +166,7 @@ void loop() {
 
 void rootPage(EasyWebServer &w) {
 
-    htmlHeader(EasyWebServer & w, "Cachalot");
+    htmlHeader(w, "Cachalot");
     w.client.println(F("<p>Welcome to my Cachalot IoT sensors.</p>"));
 
     w.client.print(F("Values :"));
@@ -204,7 +204,7 @@ void rootPage(EasyWebServer &w) {
     w.client.println(
             F("<p>Debug : <a href='/debug/analog'>analog sensors</a>, <a href='/debug/digital'>digital sensors</a></p>"));
     w.client.println(F("<p>More : <a href='/json'>values in JSON</a></p>"));
-    htmlFooter(EasyWebServer & w)
+    htmlFooter(w);
 
 }
 
@@ -270,7 +270,7 @@ void relay_2_off(EasyWebServer &w) {
 
 
 void analogSensorPage(EasyWebServer &w) {
-    htmlHeader(EasyWebServer & w, "Debug Analog Sensors");
+    htmlHeader(w, "Debug Analog Sensors");
     for (uint8_t analogChannel = 0; analogChannel < 6; analogChannel++) {
         uint8_t sensorReading = analogRead(analogChannel); // Note that analogRead uses CHANNELS instead of pin.
         w.client.print(F("analog input "));
@@ -280,11 +280,11 @@ void analogSensorPage(EasyWebServer &w) {
         w.client.println(F("<br />"));
     }
     w.client.println(F("<p><a href='/'>Home</a>"));
-    htmlFooter(EasyWebServer & w);;
+    htmlFooter(w);;
 }
 
 void digitalSensorPage(EasyWebServer &w) {
-    htmlHeader(EasyWebServer & w, "Debug Digital Sensors");
+    htmlHeader(w, "Debug Digital Sensors");
 
     for (uint8_t digitalPin = 2; digitalPin < 8; digitalPin++) {
         uint8_t sensorReading = digitalRead(digitalPin);
@@ -295,14 +295,14 @@ void digitalSensorPage(EasyWebServer &w) {
         w.client.println(F("<br />"));
     }
     w.client.println(F("<p><a href='/'>Home</a>"));
-    htmlFooter(EasyWebServer & w);
+    htmlFooter(w);
 
 }
 
-void htmlHeader(EasyWebServer &w, char title) {
+void htmlHeader(EasyWebServer &w, char pageTitle) {
     w.client.println(F("<!DOCTYPE HTML>"));
     w.client.println(F("<html><head><title>"));
-    w.client.println(title);
+    w.client.println(pageTitle);
     w.client.println(F("</title>"));
     w.client.println(F("<meta name=\"robots\" content=\"noindex\">"));
     w.client.println(F("<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">"));
