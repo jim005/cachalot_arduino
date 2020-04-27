@@ -306,6 +306,7 @@ void htmlHeader(EasyWebServer &w, char title) {
     w.client.println(F("</title>"));
     w.client.println(F("<meta name=\"robots\" content=\"noindex\">"));
     w.client.println(F("<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">"));
+    w.client.println(F("<meta charset=\"UTF-8\" />"));
     w.client.println(F("</head><body style=\"padding: 0.5em;font-family: sans-serif;\">"));
 }
 
