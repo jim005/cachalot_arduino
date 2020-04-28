@@ -167,6 +167,8 @@ void loop() {
 void rootPage(EasyWebServer &w) {
 
     htmlHeader(w, "Cachalot");
+    
+    w.client.println(F("<meta http-equiv=\"refresh\" content=\"15;url=/\" />"));
     w.client.println(F("<p>Welcome to my Cachalot IoT sensors.</p>"));
 
     w.client.print(F("Values :"));
@@ -243,29 +245,42 @@ void dashboardJSON(EasyWebServer &w) {
 void relay_1_on(EasyWebServer &w) {
 
     digitalWrite(GPIO_RELAY_1, LOW);
-    w.client.println(F("<meta http-equiv=\"refresh\" content=\"0;url=/\" />"));
 
+    htmlHeader(w, "OK");
+    w.client.println(F("Ok, got it. Redirect to homepage in 5 seconds."));
+    w.client.println(F("<meta http-equiv=\"refresh\" content=\"5;url=/\" />"));
+    htmlFooter(w);
 }
 
 void relay_1_off(EasyWebServer &w) {
 
     digitalWrite(GPIO_RELAY_1, HIGH);
-    w.client.println(F("<meta http-equiv=\"refresh\" content=\"0;url=/\" />"));
-
+    
+    htmlHeader(w, "OK");
+    w.client.println(F("Ok, got it. Redirect to homepage in 5 seconds."));
+    w.client.println(F("<meta http-equiv=\"refresh\" content=\"5;url=/\" />"));
+    htmlFooter(w);
 }
 
 void relay_2_on(EasyWebServer &w) {
 
     digitalWrite(GPIO_RELAY_2, LOW);
-    w.client.println(F("<meta http-equiv=\"refresh\" content=\"0;url=/\" />"));
+
+    htmlHeader(w, "OK");
+    w.client.println(F("Ok, got it. Redirect to homepage in 5 seconds."));
+    w.client.println(F("<meta http-equiv=\"refresh\" content=\"5;url=/\" />"));
+    htmlFooter(w);
 
 }
 
 void relay_2_off(EasyWebServer &w) {
 
     digitalWrite(GPIO_RELAY_2, HIGH);
-    w.client.println(F("<meta http-equiv=\"refresh\" content=\"0;url=/\" />"));
-
+    
+    htmlHeader(w, "OK");
+    w.client.println(F("Ok, got it. Redirect to homepage in 5 seconds."));
+    w.client.println(F("<meta http-equiv=\"refresh\" content=\"5;url=/\" />"));
+    htmlFooter(w);
 }
 
 
