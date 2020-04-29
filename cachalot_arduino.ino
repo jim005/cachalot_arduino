@@ -332,17 +332,32 @@ void htmlFooter(EasyWebServer &w) {
 // Get Temperature float in Celsius
 float getTemperature() {
     float t = dht.readTemperature();
+    if (isnan(t)) {
+        Serial.println("Failed to read Temperature from DHT sensor!");
+        return;
+    }
     return t;
 }
 
 // Get Humidity
 float getHumidity() {
-    return dht.readHumidity();
+
+    float h = dht.readHumidity();
+    if (isnan(h)) {
+        Serial.println("Failed to read Humidity from DHT sensor!");
+        return;
+    }
+    return h;
 }
 
 // Get Heat Index in Celsius
 float getHeatIndex() {
-    return dht.computeHeatIndex(TEMPERATURE, HUMIDITY, false);
+    float hi = dht.computeHeatIndex(TEMPERATURE, HUMIDITY, false);
+    if (isnan(hi)) {
+        Serial.println("Failed to read Heat Index from DHT sensor!");
+        return;
+    }
+    return hi;
 }
 
 // Get Water level in centimeter
