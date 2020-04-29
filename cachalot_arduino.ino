@@ -219,15 +219,27 @@ void dashboardJSON(EasyWebServer &w) {
     w.client.print(F(","));
 
     w.client.print(F("\"TEMPERATURE\":"));
-    w.client.print(TEMPERATURE);
+    if (isnan(TEMPERATURE)) {
+         w.client.print(F("null"));
+    } else {
+      w.client.print(TEMPERATURE);      
+    }
     w.client.print(F(","));
 
     w.client.print(F("\"HUMIDITY\":"));
-    w.client.print(HUMIDITY);
+    if (isnan(HUMIDITY)) {
+         w.client.print(F("null"));
+    } else {
+      w.client.print(HUMIDITY);      
+    }
     w.client.print(F(","));
 
     w.client.print(F("\"HEATINDEX\":"));
-    w.client.print(HEATINDEX);
+    if (isnan(HEATINDEX)) {
+         w.client.print(F("null"));
+    } else {
+      w.client.print(HEATINDEX);      
+    }
     w.client.print(F(","));
 
     w.client.print(F("\"RELAY1STATUS\":"));
@@ -331,33 +343,34 @@ void htmlFooter(EasyWebServer &w) {
 
 // Get Temperature float in Celsius
 float getTemperature() {
-    float t = dht.readTemperature();
-    if (isnan(t)) {
-        Serial.println("Failed to read Temperature from DHT sensor!");
+    
+    TEMPERATURE = dht.readTemperature();
+    if (isnan(TEMPERATURE)) {
+        Serial.println(F("Failed to read Temperature from DHT sensor!"));
         return;
     }
-    return t;
+    return TEMPERATURE;
 }
 
 // Get Humidity
 float getHumidity() {
 
-    float h = dht.readHumidity();
-    if (isnan(h)) {
-        Serial.println("Failed to read Humidity from DHT sensor!");
+    HUMIDITY = dht.readHumidity();
+    if (isnan(HUMIDITY)) {
+        Serial.println(F("Failed to read Humidity from DHT sensor!"));
         return;
     }
-    return h;
+    return HUMIDITY;
 }
 
 // Get Heat Index in Celsius
 float getHeatIndex() {
-    float hi = dht.computeHeatIndex(TEMPERATURE, HUMIDITY, false);
-    if (isnan(hi)) {
-        Serial.println("Failed to read Heat Index from DHT sensor!");
+    HEATINDEX = dht.computeHeatIndex(TEMPERATURE, HUMIDITY, false);
+    if (isnan(HEATINDEX)) {
+        Serial.println(F("Failed to read Heat Index from DHT sensor!"));
         return;
     }
-    return hi;
+    return HEATINDEX;
 }
 
 // Get Water level in centimeter
