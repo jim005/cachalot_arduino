@@ -1,4 +1,4 @@
-//----------------------------------------
+ //----------------------------------------
 // Affichage du niveau d'eau de la cuve "Cachalot"
 //
 //
@@ -11,7 +11,7 @@
 //
 // -------------------------------------------
 
-bool DEBUG = 1;
+#define DEBUG 0 // 0, ou 1 pour debug dans la console serie
 
 // Library
 #include <SPI.h>
@@ -298,7 +298,7 @@ void relay_2_off(EasyWebServer &w) {
 
 void analogSensorPage(EasyWebServer &w) {
     htmlHeader(w, "Debug Analog Sensors");
-    for (uint8_t analogChannel = 0; analogChannel < 6; analogChannel++) {
+    for (uint8_t analogChannel = 0; analogChannel < 8; analogChannel++) {
         uint8_t sensorReading = analogRead(analogChannel); // Note that analogRead uses CHANNELS instead of pin.
         w.client.print(F("analog input "));
         w.client.print(analogChannel);
@@ -313,7 +313,7 @@ void analogSensorPage(EasyWebServer &w) {
 void digitalSensorPage(EasyWebServer &w) {
     htmlHeader(w, "Debug Digital Sensors");
 
-    for (uint8_t digitalPin = 2; digitalPin < 8; digitalPin++) {
+    for (uint8_t digitalPin = 2; digitalPin < 14; digitalPin++) {
         uint8_t sensorReading = digitalRead(digitalPin);
         w.client.print(F("digital pin "));
         w.client.print(digitalPin);
