@@ -11,7 +11,7 @@
 //
 // -------------------------------------------
 
-#define DEBUG 0 // 0, ou 1 pour debug dans la console serie
+#define DEBUG 1 // 0, ou 1 pour debug dans la console serie
 
 // Library
 #include <SPI.h>
@@ -69,6 +69,11 @@ void setup() {
     pinMode(GPIO_RELAY_1, OUTPUT);
     digitalWrite(GPIO_RELAY_1, HIGH);
 
+    
+    // GPIO_RELAY_1 module prepared
+    pinMode(GPIO_RELAY_2, OUTPUT);
+    digitalWrite(GPIO_RELAY_2, HIGH);
+
 
     // initialize serial communication at 9600 bits per second:
     // debug
@@ -106,13 +111,14 @@ void loop() {
     // check for a reading no more than once a second.
     if (millis() - LASTREADINGTIME > 5000) {
 
-        delay(2000);
+        delay(1000);
 
         WATER_LEVEL_MEASURE = getWaterLevel();
         TEMPERATURE = getTemperature();
         HUMIDITY = getHumidity();
         HEATINDEX = getHeatIndex();
         RELAY_1_STATUS = !(digitalRead(GPIO_RELAY_1));
+        RELAY_2_STATUS = !(digitalRead(GPIO_RELAY_2));
 
         // timestamp the last time you got a reading:
         LASTREADINGTIME = millis();
@@ -156,9 +162,9 @@ void loop() {
         w.serveUrl("/", rootPage);                          // Root page
         w.serveUrl("/json", dashboardJSON, EWS_TYPE_JSON);  // JSON page
         w.serveUrl("/relay_1/off", relay_1_off);            // Switch OFF relay 1
-        w.serveUrl("/relay_1/on", relay_1_on);              // Switch ON relay 1
+        w.serveUrl("/relay_1/on",  relay_1_on);             // Switch ON relay 1
         w.serveUrl("/relay_2/off", relay_2_off);            // Switch OFF relay 2
-        w.serveUrl("/relay_2/on", relay_2_on);              // Switch ON relay 2
+        w.serveUrl("/relay_2/on",  relay_2_on);             // Switch ON relay 2
         w.serveUrl("/debug/analog", analogSensorPage);      // Analog sensor page
         w.serveUrl("/debug/digital", digitalSensorPage);    // Digital sensor page
     }
