@@ -11,7 +11,7 @@
 //
 // -------------------------------------------
 
-#define DEBUG 1 // 0, ou 1 pour debug dans la console serie
+#define DEBUG 0 // 0, ou 1 pour debug dans la console serie
 
 // Library
 #include <SPI.h>
@@ -332,7 +332,7 @@ void digitalSensorPage(EasyWebServer &w) {
 
 }
 
-void htmlHeader(EasyWebServer &w, char pageTitle) {
+void htmlHeader(EasyWebServer &w, char *pageTitle) {
     w.client.println(F("<!DOCTYPE HTML>"));
     w.client.println(F("<html><head><title>"));
     w.client.println(pageTitle);
